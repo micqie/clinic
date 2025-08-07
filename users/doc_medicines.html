@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Medicines Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <link rel="stylesheet" href="../assets/style.css">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('../assets/clinic-bg.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
+
+    /* Offcanvas for Sidebar */
+    .offcanvas-body a {
+        display: block;
+        padding: 10px;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .offcanvas-body a:hover {
+        background-color: #495057;
+        border-radius: 5px;
+    }
+
+    .card {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .content {
+      margin-left: 20px; /* Adjust as needed */
+      padding: 20px;
+    }
+
+    @media (min-width: 992px) { /* Adjust sidebar for larger screens */
+        .sidebar {
+            width: 220px;
+            position: fixed;
+            height: 100%;
+            background-color: #343a40;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            display: block;
+            padding: 10px 15px;
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #495057;
+        }
+        .content {
+            margin-left: 240px;
+        }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+      <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        ☰
+      </button>
+      <span class="navbar-brand">Mcstuffin's Clinic</span>
+      <a class="btn btn-outline-light" href="#">Log out</a>
+    </div>
+  </nav>
+
+  <div class="offcanvas offcanvas-start text-bg-dark d-lg-none" tabindex="-1" id="sidebarMenu">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Doctor Panel</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <a href="#">Dashboard</a>
+      <a href="#">Profile</a>
+      <a href="#">Appointments</a>
+      <a href="#">Patients</a>
+      <a href="doc_medicines.html">Medicines</a>
+      <a href="#">Laboratory</a>
+    </div>
+  </div>
+
+  <div class="sidebar d-none d-lg-block">
+    <span style="margin-left: 20px; color: aliceblue; font-size: 1.25rem;">Doctor Panel</span>
+    <a href="../doctor_dashboard.html">Dashboard</a>
+    <a href="#">Profile</a>
+    <a href="#">Appointments</a>
+    <a href="#">Patients</a>
+    <a href="doc_medicines.html">Medicines</a>
+    <a href="#">Laboratory</a>
+  </div>
+
+  <div class="content">
+    <h3 class="text-white mb-4">Medicine Management</h3>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card p-4 h-100">
+          <h5 class="card-title">Add New Medicine</h5>
+          <form id="addMedicineForm">
+            <div class="mb-2">
+              <input type="text" class="form-control" id="name" placeholder="Name" required>
+            </div>
+            <div class="mb-2">
+              <input type="text" class="form-control" id="description" placeholder="Description">
+            </div>
+            <div class="mb-2">
+              <input type="number" class="form-control" id="quantity" placeholder="Quantity" required>
+            </div>
+            <div class="mb-3">
+              <input type="number" class="form-control" id="price" placeholder="Price" step="0.01" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Add Medicine</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <div class="card p-4 h-100">
+          <h5 class="card-title">Medicine List</h5>
+          <div class="table-responsive">
+            <table class="table table-hover table-striped mt-3 bg-white">
+              <thead class="table-dark">
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="medicineTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="updateModalLabel">Update Medicine</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="updateMedicineForm">
+            <input type="hidden" id="updateId">
+            <div class="mb-3">
+              <label for="updateName" class="form-label">Name</label>
+              <input type="text" class="form-control" id="updateName" placeholder="Name" required>
+            </div>
+            <div class="mb-3">
+              <label for="updateDescription" class="form-label">Description</label>
+              <input type="text" class="form-control" id="updateDescription" placeholder="Description">
+            </div>
+            <div class="mb-3">
+              <label for="updateQuantity" class="form-label">Quantity</label>
+              <input type="number" class="form-control" id="updateQuantity" placeholder="Quantity" required>
+            </div>
+            <div class="mb-3">
+              <label for="updatePrice" class="form-label">Price</label>
+              <input type="number" class="form-control" id="updatePrice" placeholder="Price" step="0.01" required>
+            </div>
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-success">Save Changes</button>
+              <button type="button" class="btn btn-danger" id="deleteButton">Delete</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const baseApiUrl = 'http://localhost/clinic2.0/api';
+    const medicineApi = `${baseApiUrl}/medicine.php`;
+
+    // Initialize the Bootstrap modal
+    const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+
+    function fetchMedicines() {
+      axios.get(`${medicineApi}?operation=list`)
+        .then(res => {
+          const medicines = res.data.medicines || [];
+          const rows = medicines.map(med => `
+            <tr>
+              <td>${med.name}</td>
+              <td>${med.description}</td>
+              <td>${med.quantity}</td>
+              <td>₱${parseFloat(med.price).toFixed(2)}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-warning" onclick="showUpdateModal(${med.id}, '${med.name}', '${med.description}', ${med.quantity}, ${med.price})">Update</button>
+              </td>
+            </tr>
+          `).join('');
+          document.getElementById("medicineTableBody").innerHTML = rows;
+        })
+        .catch(err => {
+          console.error('Error loading medicines', err);
+        });
+    }
+
+    document.getElementById("addMedicineForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const medicine = {
+        name: document.getElementById("name").value,
+        description: document.getElementById("description").value,
+        quantity: parseInt(document.getElementById("quantity").value),
+        price: parseFloat(document.getElementById("price").value)
+      };
+      axios.post(`${medicineApi}?operation=add`, medicine, {
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => {
+        alert(res.data.message || 'Medicine added.');
+        fetchMedicines();
+        this.reset();
+      })
+      .catch(err => {
+        console.error('Add error', err);
+      });
+    });
+
+    function showUpdateModal(id, name, description, quantity, price) {
+      document.getElementById("updateId").value = id;
+      document.getElementById("updateName").value = name;
+      document.getElementById("updateDescription").value = description;
+      document.getElementById("updateQuantity").value = quantity;
+      document.getElementById("updatePrice").value = price;
+
+      // Show the Bootstrap modal
+      updateModal.show();
+    }
+
+    document.getElementById("updateMedicineForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const medicine = {
+        id: document.getElementById("updateId").value,
+        name: document.getElementById("updateName").value,
+        description: document.getElementById("updateDescription").value,
+        quantity: parseInt(document.getElementById("updateQuantity").value),
+        price: parseFloat(document.getElementById("updatePrice").value)
+      };
+      axios.post(`${medicineApi}?operation=update`, medicine, {
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => {
+        alert(res.data.message || 'Medicine updated.');
+        fetchMedicines();
+        updateModal.hide();
+      })
+      .catch(err => {
+        console.error('Update error', err);
+      });
+    });
+
+    // Add event listener for the delete button
+    document.getElementById("deleteButton").addEventListener("click", function() {
+        if (confirm("Are you sure you want to delete this medicine?")) {
+            const id = document.getElementById("updateId").value;
+            axios.post(`${medicineApi}?operation=delete`, { id: id }, {
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => {
+                alert(res.data.message || 'Medicine deleted.');
+                fetchMedicines();
+                updateModal.hide();
+            })
+            .catch(err => {
+                console.error('Delete error', err);
+            });
+        }
+    });
+
+    fetchMedicines();
+  </script>
+</body>
+</html>

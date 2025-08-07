@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Appointment Request</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Request an Appointment</h2>
+        <form id="appointmentForm">
+            <label for="appointmentDate">Choose a date:</label>
+            <input type="date" id="appointmentDate" name="appointmentDate" required>
+            <button type="submit">Request Appointment</button>
+        </form>
+        <div id="appointmentStatus"></div>
+    </div>
+    <script src="../js/patients.js"></script>
+</body>
+</html>
