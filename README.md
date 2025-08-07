@@ -1,1 +1,168 @@
 # clinic
+
+
+🖥️ Patient Dashboard – Suggested Layout
+🔹 1. Welcome Section
+“Welcome, [Patient Name]!”
+Quick stats: Upcoming appointments, last consultation, prescription count
+
+🔹 2. Profile Section
+Show/edit:
+Contact number
+Address
+Birthday
+Gender
+Emergency contact
+Medical history (textarea or modal popup)
+
+🟢 You can place a "Complete Your Profile" alert if they haven’t filled it out yet.
+
+🔹 3. Appointments Section
+Button: Book Appointment
+
+Table:
+Date	Time	Doctor	Status
+2025-08-05	2:00PM	Dr. Santos	Confirmed
+2025-08-10	9:00AM	Dr. Ramirez	Pending
+
+🔹 4. Prescriptions Section
+List of current/previous prescriptions:
+
+Medicine	Dosage	Notes	Prescribed By
+Paracetamol	500mg	Take after meal	Dr. Santos
+Amoxicillin	250mg	3x daily	Dr. Ramirez
+
+🔹 5. Notifications
+Alerts like:
+“You have an appointment tomorrow.”
+“New prescription added.”
+“Profile incomplete – click here to update.”
+
+🔹 6. Logout Button
+Always available for secure logout.
+
+🧩 Optional Add-ons:
+Upload ID or health records
+Download medical certificates
+Ask a doctor (simple form for questions)
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Secretary Dashboard – Suggested Layout
+🔹 1. Welcome Section
+“Welcome, [Secretary Name]!”
+Quick stats:
+Today’s appointments: 5
+Total patients: 45
+Total doctors: 3
+
+🔹 2. Appointment Management
+Add Appointment (Form)
+Appointments Table
+Date	Time	Patient	Doctor	Status	Action
+2025-08-02	10:00	Maikie L.	Dr. Santos	Pending	Confirm / Cancel
+2025-08-02	11:30	Anna Cruz	Dr. Ramirez	Confirmed	Cancel
+
+🔹 3. Patient Management
+Register New Patient (link to form)
+Patients Table
+Name	Contact Number	Age	Action
+Maikie L.	09123456789	25	View / Edit
+Anna Cruz	09981234567	32	View / Edit
+
+🟢 Optional: filter/search by name or status
+
+
+🔹 4. Doctor Management
+Add Doctor (if allowed)
+Doctors Table
+Name	Specialty	Schedule	Action
+Dr. Santos	Pediatrics	MWF 8–12	View/Edit
+Dr. Ramirez	General	TThS 1–5	View/Edit
+
+🔹 5. Prescription Requests (Optional, if doctors submit digitally)
+Notifications like:
+“New prescription issued by Dr. Santos.”
+“Patient Maikie requested a refill.”
+
+🔹 6. Logs / History
+View action logs: updated patient info, booked appointments, etc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+🩺 Doctor Dashboard – Suggested Layout
+🔹 1. Welcome Section
+“Welcome, Dr. [Name]!”
+Quick overview:
+Appointments Today: 3
+Pending Patients: 2
+
+Total Patients Seen This Week: 18
+
+🔹 2. Today’s Appointments
+Table of Scheduled Patients
+
+Time	Patient Name	Reason/Notes	Status	Action
+10:00 AM	Maikie L.	Fever, cough	Waiting	Start Checkup
+11:00 AM	Anna Cruz	Back pain	Waiting	Start Checkup
+
+🔹 3. Start Checkup / Patient Profile
+Clicking Start Checkup opens the patient's info:
+
+Name: Maikie L.
+
+Age: 25
+
+Contact: 09123456789
+
+Past Visits:
+
+2025-07-10 – Headache
+
+2025-06-28 – Flu
+
+✅ Doctor can:
+
+Add diagnosis
+
+Prescribe medicine
+
+Add medical notes
+
+Example form:
+
+php
+Copy code
+Diagnosis: [Text area]
+Prescription: [Text area or medicine selector]
+Submit / Save
+🔹 4. Prescriptions History
+Table of prescriptions issued
+Date	Patient	Medicine	Notes
+2025-07-15	Anna Cruz	Paracetamol	3x a day for 5 days
+
+🔹 5. Patient Search
+Search bar to find any patient by name
+View full medical record (read-only access to secretary-entered data)

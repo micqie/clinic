@@ -20,7 +20,7 @@ class User
     }
 
     // Check if email exists
-    $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $check = $conn->prepare("SELECT id FROM tbl_users WHERE email = ?");
     $check->execute([$email]);
     if ($check->fetch()) {
         return ["success" => false, "message" => "Email already exists."];
@@ -28,7 +28,7 @@ class User
 
     // Insert into users
     $hashed = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO tbl_users (full_name, email, password, role) VALUES (?, ?, ?, ?)");
     $stmt->execute([$fullName, $email, $hashed, $role]);
     $userId = $conn->lastInsertId();
 
@@ -36,14 +36,14 @@ class User
     try {
              switch ($role) {
             case 'doctor':
-                $conn->prepare("INSERT INTO doctor (user_id) VALUES (?)")->execute([$userId]);
+                $conn->prepare("INSERT INTO tbl_doctors (user_id) VALUES (?)")->execute([$userId]);
                 break;
             case 'secretary':
-                $conn->prepare("INSERT INTO secretary (user_id) VALUES (?)")->execute([$userId]);
+                $conn->prepare("INSERT INTO tbl_secretaries (user_id) VALUES (?)")->execute([$userId]);
                 break;
             case 'patient':
                 // Insert into patients with matching patient_id and full_name
-                $conn->prepare("INSERT INTO patients (patient_id, full_name) VALUES (?, ?)")->execute([$userId, $fullName]);
+                $conn->prepare("INSERT INTO tbl_patients (patient_id, full_name) VALUES (?, ?)")->execute([$userId, $fullName]);
                 break;
             default:
                 return ["success" => false, "message" => "Unknown user role."];
@@ -66,13 +66,14 @@ class User
             return ["success" => false, "message" => "Email and password required."];
         }
 
-        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT * FROM tbl_users WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
             return [
                 "success" => true,
+                "id" => $user['id'], // <-- Add this line
                 "role" => $user['role'],
                 "fullName" => $user['full_name'],
                 "message" => "Login successful as " . $user['role']

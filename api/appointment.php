@@ -39,50 +39,94 @@ class AppointmentAPI {
         }
     }
 
-    private function requestAppointment() {
-        $date = $this->input['date'] ?? null;
-        $patient_id = $this->input['patient_id'] ?? 1; // Use provided patient_id or fallback to 1
-        if (!$date) {
-            $this->respond(['success' => false, 'message' => 'Date required.']);
-        }
-        $status_id = 1; // pending
-        $stmt = $this->conn->prepare('INSERT INTO appointment (patient_id, appointment_date, status_id) VALUES (?, ?, ?)');
-        $stmt->bind_param('isi', $patient_id, $date, $status_id);
-        if ($stmt->execute()) {
-            $this->respond(['success' => true, 'status' => 'pending']);
-        } else {
-            $this->respond(['success' => false, 'message' => 'Failed to request appointment.', 'error' => $stmt->error]);
-        }
+private function requestAppointment() {
+    session_start(); // Ensure session is started
+    $date = $this->input['date'] ?? null;
+    $patient_id = $_SESSION['user_id'] ?? null; // Get patient ID from session
+
+    if (!$date || !$patient_id) {
+        $this->respond(['success' => false, 'message' => 'Date and patient ID are required.']);
+        return;
     }
 
+    // Validate patient exists
+    $check = $this->conn->prepare("SELECT COUNT(*) FROM tbl_patients WHERE user_id = ?");
+    $check->execute([$patient_id]);
+
+    if ($check->fetchColumn() == 0) {
+        $this->respond(['success' => false, 'message' => 'Invalid patient ID.']);
+        return;
+    }
+
+    // Get actual patient_id (primary key)
+    $stmt = $this->conn->prepare("SELECT patient_id FROM tbl_patients WHERE user_id = ?");
+    $stmt->execute([$patient_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) {
+        $this->respond(['success' => false, 'message' => 'Patient not found.']);
+        return;
+    }
+
+    $real_patient_id = $row['patient_id'];
+    $status_id = 1; // pending
+
+    try {
+        $stmt = $this->conn->prepare('INSERT INTO tbl_appointment (patient_id, appointment_date, status_id) VALUES (?, ?, ?)');
+        $stmt->execute([$real_patient_id, $date, $status_id]);
+
+        if ($stmt->rowCount() > 0) {
+            $this->respond(['success' => true, 'status' => 'pending', 'message' => 'Appointment requested successfully']);
+        } else {
+            $this->respond(['success' => false, 'message' => 'Failed to request appointment.']);
+        }
+    } catch (PDOException $e) {
+        $this->respond(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
     private function listAppointments() {
-        $result = $this->conn->query('SELECT a.*, p.full_name as patient_name, d.full_name as doctor_name, s.status_name FROM appointment a LEFT JOIN patients p ON a.patient_id = p.patient_id LEFT JOIN doctor d ON a.doctor_id = d.doctor_id LEFT JOIN status s ON a.status_id = s.status_id ORDER BY a.appointment_id DESC');
-        $requests = [];
-        while ($row = $result->fetch_assoc()) {
-            $requests[] = $row;
+        try {
+            $stmt = $this->conn->query('SELECT a.*, p.full_name as patient_name, d.full_name as doctor_name, s.status_name
+                FROM tbl_appointment a
+                LEFT JOIN tbl_patients p ON a.patient_id = p.patient_id
+                LEFT JOIN tbl_doctors d ON a.doctor_id = d.doctor_id
+                LEFT JOIN tbl_status s ON a.status_id = s.status_id
+                ORDER BY a.appointment_id DESC');
+            $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $docStmt = $this->conn->query("SELECT doctor_id as id, full_name as name FROM tbl_doctors");
+            $doctors = $docStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $this->respond(['success' => true, 'requests' => $requests, 'doctors' => $doctors]);
+        } catch (PDOException $e) {
+            $this->respond(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
         }
-        $doctors = [];
-        $docres = $this->conn->query("SELECT doctor_id as id, full_name as name FROM doctor");
-        while ($doc = $docres->fetch_assoc()) {
-            $doctors[] = $doc;
-        }
-        $this->respond(['success' => true, 'requests' => $requests, 'doctors' => $doctors]);
     }
 
     private function confirmAppointment() {
         $appointment_id = $this->input['appointment_id'] ?? null;
         $doctor_id = $this->input['doctor_id'] ?? null;
+
         if (!$appointment_id || !$doctor_id) {
-            $this->respond(['success' => false, 'message' => 'Missing appointment or doctor.']);
+            $this->respond(['success' => false, 'message' => 'Missing appointment or doctor ID.']);
+            return;
         }
-        $reference = self::random_reference();
+
+        $reference = self::random_reference(); // Assuming limit_id is string/varchar. If it’s an int FK, handle differently.
         $status_id = 2; // confirmed
-        $stmt = $this->conn->prepare('UPDATE appointment SET status_id=?, doctor_id=?, limit_id=? WHERE appointment_id=?');
-        $stmt->bind_param('iiii', $status_id, $doctor_id, $reference, $appointment_id);
-        if ($stmt->execute()) {
-            $this->respond(['success' => true, 'reference' => $reference]);
-        } else {
-            $this->respond(['success' => false, 'message' => 'Failed to confirm appointment.', 'error' => $stmt->error]);
+
+        try {
+            $stmt = $this->conn->prepare('UPDATE appointment SET status_id=?, doctor_id=?, limit_id=? WHERE appointment_id=?');
+            $stmt->execute([$status_id, $doctor_id, $reference, $appointment_id]);
+
+            if ($stmt->rowCount() > 0) {
+                $this->respond(['success' => true, 'reference' => $reference, 'message' => 'Appointment confirmed successfully']);
+            } else {
+                $this->respond(['success' => false, 'message' => 'Failed to confirm appointment.']);
+            }
+        } catch (PDOException $e) {
+            $this->respond(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
         }
     }
 

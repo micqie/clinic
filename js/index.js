@@ -23,9 +23,10 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     });
 
     if (res.data.success) {
-      const { fullName, role, message } = res.data;
+      const { id, fullName, role, message } = res.data;
 
       // Store in localStorage
+      localStorage.setItem('id', id);
       localStorage.setItem('fullName', fullName);
       localStorage.setItem('role', role);
 

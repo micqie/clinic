@@ -9,13 +9,13 @@ class Medicine {
     }
 
     public function getAll() {
-        $stmt = $this->conn->prepare("SELECT * FROM medicines ORDER BY id DESC");
+        $stmt = $this->conn->prepare("SELECT * FROM tbl_medicines ORDER BY id DESC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function add($data) {
-        $stmt = $this->conn->prepare("INSERT INTO medicines (name, description, quantity, price) VALUES (?, ?, ?, ?)");
+        $stmt = $this->conn->prepare("INSERT INTO tbl_medicines (name, description, quantity, price) VALUES (?, ?, ?, ?)");
         $stmt->execute([
             $data['name'],
             $data['description'],
@@ -26,7 +26,7 @@ class Medicine {
     }
 
     public function update($data) {
-        $stmt = $this->conn->prepare("UPDATE medicines SET name = ?, description = ?, quantity = ?, price = ? WHERE id = ?");
+        $stmt = $this->conn->prepare("UPDATE tbl_medicines SET name = ?, description = ?, quantity = ?, price = ? WHERE id = ?");
         $stmt->execute([
             $data['name'],
             $data['description'],
@@ -38,7 +38,7 @@ class Medicine {
     }
 
     public function getById($id) {
-        $stmt = $this->conn->prepare("SELECT * FROM medicines WHERE id = ?");
+        $stmt = $this->conn->prepare("SELECT * FROM tbl_medicines WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

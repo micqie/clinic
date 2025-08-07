@@ -36,28 +36,34 @@ class PatientsAPI {
     }
 
     private function listPatients() {
-        $result = $this->conn->query('SELECT * FROM patients');
-        $patients = [];
-        while ($row = $result->fetch_assoc()) {
-            $patients[] = $row;
+        try {
+            $stmt = $this->conn->query('SELECT * FROM tbl_patients');
+            $patients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->respond($patients);
+        } catch (PDOException $e) {
+            $this->respond(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
         }
-        $this->respond($patients);
     }
 
     private function viewPatient() {
         $id = $_GET['id'] ?? null;
         if (!$id) {
             $this->respond(['success' => false, 'message' => 'Missing patient id.']);
+            return;
         }
-        $stmt = $this->conn->prepare('SELECT * FROM patients WHERE patient_id = ?');
-        $stmt->bind_param('i', $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $patient = $result->fetch_assoc();
-        if ($patient) {
-            $this->respond($patient);
-        } else {
-            $this->respond(['success' => false, 'message' => 'Patient not found.']);
+
+        try {
+            $stmt = $this->conn->prepare('SELECT * FROM tbl_patients WHERE patient_id = ?');
+            $stmt->execute([$id]);
+            $patient = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($patient) {
+                $this->respond($patient);
+            } else {
+                $this->respond(['success' => false, 'message' => 'Patient not found.']);
+            }
+        } catch (PDOException $e) {
+            $this->respond(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
         }
     }
 
@@ -65,23 +71,30 @@ class PatientsAPI {
         $id = $_GET['id'] ?? null;
         if (!$id) {
             $this->respond(['success' => false, 'message' => 'Missing patient id.']);
+            return;
         }
+
         $data = $this->input;
-        $stmt = $this->conn->prepare('UPDATE patients SET full_name=?, email=?, birthdate=?, sex=?, contact_number=?, address=? WHERE patient_id=?');
-        $stmt->bind_param(
-            'ssssssi',
-            $data['full_name'],
-            $data['email'],
-            $data['birthdate'],
-            $data['sex'],
-            $data['contact_number'],
-            $data['address'],
-            $id
-        );
-        if ($stmt->execute()) {
-            $this->respond(['success' => true, 'message' => 'Patient updated.']);
-        } else {
-            $this->respond(['success' => false, 'message' => 'Failed to update patient.']);
+
+        try {
+            $stmt = $this->conn->prepare('UPDATE tbl_patients SET full_name=?, email=?, birthdate=?, sex=?, contact_number=?, address=? WHERE patient_id=?');
+            $stmt->execute([
+                $data['full_name'],
+                $data['email'],
+                $data['birthdate'],
+                $data['sex'],
+                $data['contact_number'],
+                $data['address'],
+                $id
+            ]);
+
+            if ($stmt->rowCount() > 0) {
+                $this->respond(['success' => true, 'message' => 'Patient updated.']);
+            } else {
+                $this->respond(['success' => false, 'message' => 'Patient not found or no changes made.']);
+            }
+        } catch (PDOException $e) {
+            $this->respond(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
         }
     }
 
